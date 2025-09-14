@@ -3,6 +3,8 @@ name = "walscribe"
 edition = "2024.beta" # edition = "legacy" to use legacy (pre-2024) Move
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"
 # authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
+published-at = "0xf8a9b613d11f0721c3ffcc19aae911e76c820be40b8aab23c8407f010906dca5"
+
 
 [dependencies]
 

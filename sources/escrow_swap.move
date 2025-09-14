@@ -1,4 +1,4 @@
-#[allow(unused_variable)]
+#[allow(lint(public_entry))]
 module walscribe::escrow_swap;
 
     // use sui::object::UID;
@@ -7,9 +7,20 @@ module walscribe::escrow_swap;
     use sui::event;
     //use sui::coin::Coin;
     
+    const EMismatchSenderAndRecipient: u64 = 0;
+    const EMismatchExchangeObject: u64 = 1;
+    const ELockKeyMismatch: u64 = 2;
+
+    #[allow(unused_type_parameter)]
+    public entry fun create_key<T: store>(
+        _key: ID,
+        _ctx: &mut TxContext
+    ) {
+        // No destructuring needed, just use the key parameter as is
+    }
     public struct Locked<T: store> has key, store {
         id: UID,
-        key: ID,
+        _key: ID,
         obj: T,
     }
 
@@ -25,6 +36,13 @@ module walscribe::escrow_swap;
     public struct LockedObjectKey has copy, drop, store {
     }
 
+    public struct Vault<T: key + store>has key, store{
+        id: UID,
+        owner_exchange_key: ID,
+        asset: T,
+        owner_address: address,
+    }
+
     public struct Escrow<T: key + store> has key {
         id: UID,
         sender: address,
@@ -35,9 +53,61 @@ module walscribe::escrow_swap;
         object_escrowed: T,
     }
 
-    const EMismatchSenderAndRecipient: u64 = 0;
-    const EMismatchExchangeObject: u64 = 1;
-    const ELockKeyMismatch: u64 = 2;
+    public struct EscrowEvent<T: copy + drop> has drop {
+        sender: address,
+        recipient: address,
+        object_escrowed: T,
+    }
+
+    public struct VaultEvent<T: store> has drop {
+        asset: T,
+        owner_address: address,
+    }
+
+    public entry fun create_escrow<T: store> has drop(
+        id: Key<T>,
+        sender: address,
+        recipient: address,
+        object_escrowed: T,
+    )  {
+        let escrow = EscrowEvent {
+            sender: ctx.sender(),
+            recipient: ,
+            object_escrowed: unlock(locked, key),
+        }
+
+        event::emit_event();
+    }
+    
+
+    public fun create_locked<T: store>(
+        key: ID,
+        obj: T,
+        ctx: &mut TxContext
+    ): Locked<T> {
+        Locked {
+            id: object::new(ctx),
+            _key: key,
+            obj
+        }
+    }
+
+    public entry fun create_vault<T: key + store + drop>(
+        key: Key<T>,
+        locked: Locked<T>,
+        owner_exchange_key: ID,
+        asset: T,
+        owner_address: address,
+        ctx: &mut TxContext,
+    ) {
+        let vault = Vault {
+            id: object::new(ctx),
+            owner_exchange_key: owner_exchange_key,
+            asset: unlock(locked, key),
+            owner_address,
+        };
+        transfer::transfer(vault, owner_address);
+    }
 
     public fun create<T: key + store + drop>(
         key: Key<T>,
@@ -45,7 +115,6 @@ module walscribe::escrow_swap;
         recipient_exchange_key: ID,
         recipient: address,
         verifier: address,
-        //created_at: u64,
         ctx: &mut TxContext,
     ) {
         let escrow = Escrow {
@@ -60,15 +129,15 @@ module walscribe::escrow_swap;
     }
 
     public fun unlock<T: key + store + drop>(mut locked: Locked<T>, key: Key<T>): T {
-    assert!(locked.key == object::id(&key), ELockKeyMismatch);
+    assert!(locked._key == object::id(&key), ELockKeyMismatch);
         let Key { id, key: _ } = key;
         id.delete();
 
-        let obj = dof::remove<LockedObjectKey, T>(&mut locked.id, LockedObjectKey {});
+        let _obj = dof::remove<LockedObjectKey, T>(&mut locked.id, LockedObjectKey {});
 
         event::emit(LockDestroyed { lock_id: object::id(&locked) });
 
-        let Locked { id, key, obj } = locked;
+        let Locked { id, _key, obj } = locked;
         id.delete();
         obj
     }

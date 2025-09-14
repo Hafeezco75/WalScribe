@@ -100,17 +100,3 @@ module walscribe::lock;
 //         table: Table<LockedObjectKey, T>,
 //     }
 
-    
-    // public fun return_to_sender<T: key + store>(obj: Escrow<T>) {
-    //     let Escrow {
-    //         id,
-    //         sender,
-    //         recipient: _,
-    //         recipient_exchange_key: _,
-    //         escrowed_key: _escrowed_key,
-    //         object_escrowed: object_escrowed,
-    //     } = obj;
-    //     id.delete();
-    //     transfer::public_transfer(object_escrowed, sender);
-    // }
-

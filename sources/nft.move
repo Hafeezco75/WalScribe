@@ -56,7 +56,6 @@ module walscribe::nft;
         transfer::public_transfer(nft, sender)
     }    
 
-
     public fun burn_nfts(nft: NFT, _: &mut TxContext){
         let NFT { id, name:_, description:_ , url:_} = nft;
 
